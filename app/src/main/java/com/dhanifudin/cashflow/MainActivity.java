@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import com.dhanifudin.cashflow.adapters.TransactionAdapter;
 import com.dhanifudin.cashflow.models.Account;
+import com.dhanifudin.cashflow.models.Session;
 import com.dhanifudin.cashflow.models.Transaction;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -21,6 +22,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.TextView;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
 public class MainActivity extends AppCompatActivity implements TransactionAdapter.OnItemTransactionListener{
 
     public static final String TRANSACTION_KEY = "TRANSACTION";
@@ -30,12 +34,26 @@ public class MainActivity extends AppCompatActivity implements TransactionAdapte
 
     private TextView welcomeText;
     private TextView balanceText;
+    private TextView tipe;
+    private TextView amount;
     private RecyclerView transactionsView;
     private TransactionAdapter adapter;
     private Account account;
+    private Session session;
+
+    Locale localeID= new Locale("in", "ID");
+    NumberFormat formatRupiah=NumberFormat.getCurrencyInstance(localeID);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        session = Application.getSession();
+
+        if (!session.isLoggedIn()) {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -44,6 +62,7 @@ public class MainActivity extends AppCompatActivity implements TransactionAdapte
         welcomeText = findViewById(R.id.text_welcome);
         balanceText = findViewById(R.id.text_balance);
         transactionsView = findViewById(R.id.rv_transactions);
+        tipe=findViewById(R.id.text_type);
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -56,9 +75,10 @@ public class MainActivity extends AppCompatActivity implements TransactionAdapte
             }
         });
 
+
         account = Application.getAccount();
         welcomeText.setText(String.format("Welcome %s", account.getName()));
-        balanceText.setText(String.valueOf(account.getBalance()));
+        balanceText.setText(formatRupiah.format((double)account.getBalance()));
 
         adapter = new TransactionAdapter(account.getTransactions(), this);
         transactionsView.setAdapter(adapter);
@@ -77,12 +97,11 @@ public class MainActivity extends AppCompatActivity implements TransactionAdapte
                 int index = viewHolder.getAdapterPosition();
                 account.removeTransaction(index);
                 adapter.notifyDataSetChanged();
-                balanceText.setText(String.valueOf(account.getBalance()));
+                balanceText.setText(formatRupiah.format((double)account.getBalance()));
                 welcomeText.setText(String.valueOf(account.getName()));
             }
         };
         new ItemTouchHelper(simpleItemTouchCallback).attachToRecyclerView(transactionsView);
-
 
     }
 
@@ -101,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements TransactionAdapte
             }
             adapter.notifyDataSetChanged();
             welcomeText.setText(String.valueOf(account.getName()));
-            balanceText.setText(String.valueOf(account.getBalance()));
+            balanceText.setText(formatRupiah.format((double)account.getBalance()));
         }
 
     }
@@ -122,6 +141,14 @@ public class MainActivity extends AppCompatActivity implements TransactionAdapte
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (id == R.id.action_logout) {
+            session.logout();
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+            finish();
             return true;
         }
 
@@ -139,5 +166,11 @@ public class MainActivity extends AppCompatActivity implements TransactionAdapte
     @Override
     public void onPointerCaptureChanged(boolean hasCapture) {
 
+    }
+
+    public void proses_logout(MenuItem item) {
+        session.logout();
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
     }
 }

@@ -11,11 +11,16 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.dhanifudin.cashflow.R;
 import com.dhanifudin.cashflow.models.Transaction;
 
+import java.text.NumberFormat;
 import java.util.List;
+import java.util.Locale;
 
 public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.ViewHolder> {
     private List<Transaction> items;
     private OnItemTransactionListener listener;
+
+    Locale localeID= new Locale("in", "ID");
+    NumberFormat formatRupiah=NumberFormat.getCurrencyInstance(localeID);
 
     public interface OnItemTransactionListener {
         void onTransactionClicked(int index, Transaction item);
@@ -51,16 +56,20 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView descriptionText;
         TextView amountText;
+        TextView tipeText;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             descriptionText = itemView.findViewById(R.id.text_description);
             amountText = itemView.findViewById(R.id.text_amount);
+            tipeText=itemView.findViewById(R.id.text_type);
+
         }
 
         public void bind(final int index, final Transaction item) {
             descriptionText.setText(item.getDescription());
-            amountText.setText(String.valueOf(item.getAmount()));
+            amountText.setText(formatRupiah.format((double)item.getAmount()));
+            tipeText.setText(String.valueOf(item.getType()));
             // TODO: Tambahkan interaksi click di sini
             itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
